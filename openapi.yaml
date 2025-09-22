@@ -1,0 +1,169 @@
+openapi: 3.0.3
+info:
+  title: Bank Lite API
+  version: 1.0.0
+
+servers:
+  - url: http://127.0.0.1:3000
+
+paths:
+  /v1/accounts:
+    get:
+      summary: List accounts (paginated)
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page, page_size, total]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Account'
+                  page:
+                    type: integer
+                  page_size:
+                    type: integer
+                  total:
+                    type: integer
+              example:
+                data:
+                  - { id: "acc_1", name: "Alice", balance: 1250.75, currency: GBP }
+                  - { id: "acc_2", name: "Bob", balance: 640.2, currency: GBP }
+                  - { id: "acc_3", name: "Carol", balance: 812.1, currency: EUR }
+                page: 1
+                page_size: 10
+                total: 3
+
+  /v1/accounts/{id}:
+    get:
+      summary: Get an account
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          example: acc_1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+              example:
+                data:
+                  { id: "acc_1", name: "Alice", balance: 1250.75, currency: GBP }
+
+  /v1/payments:
+    post:
+      summary: Create a payment (JWT required)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPayment'
+            example:
+              fromId: acc_1
+              toId: acc_2
+              amount: 10
+              currency: GBP
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Payment'
+              example:
+                data:
+                  id: pay_123
+                  fromId: acc_1
+                  toId: acc_2
+                  amount: 10
+                  currency: GBP
+                  createdAt: 2025-01-01T00:00:00Z
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Account:
+      type: object
+      required: [id, name, balance, currency]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        balance:
+          type: number
+        currency:
+          type: string
+          enum: [GBP, EUR]
+
+    Payment:
+      type: object
+      required: [id, fromId, toId, amount, currency, createdAt]
+      properties:
+        id:
+          type: string
+        fromId:
+          type: string
+        toId:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+          enum: [GBP, EUR]
+        createdAt:
+          type: string
+          format: date-time
+
+    NewPayment:
+      type: object
+      required: [fromId, toId, amount, currency]
+      properties:
+        fromId:
+          type: string
+        toId:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+          enum: [GBP, EUR]
