@@ -28,7 +28,7 @@ jobs:
 
       - name: Unit tests
         run: npm test
-        continue-on-error: true # optional
+        continue-on-error: true
 
       - name: Generate demo JWT
         run: |
