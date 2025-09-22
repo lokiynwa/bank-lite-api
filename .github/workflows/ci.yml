@@ -28,19 +28,12 @@ jobs:
 
       - name: Unit tests
         run: npm test
-        continue-on-error: true
+        continue-on-error: true # optional
 
       - name: Generate demo JWT
-        shell: bash
         run: |
           TOKEN=$(node -e "import('./dist/lib/jwt.js').then(m=>console.log(m.signDemoJwt()))")
-          echo "JWT_TOKEN=$TOKEN" >> $GITHUB_ENV
+          echo "TEST_JWT=$TOKEN" >> $GITHUB_ENV
 
-      - name: Contract tests (Dredd via npm script)
-        shell: bash
-        run: |
-          npm run contract:test -- \
-            ./openapi.yaml http://127.0.0.1:3000 \
-            --server="npm run dev" \
-            --server-wait=5 \
-            --header="Authorization: Bearer $JWT_TOKEN"
+      - name: Run contract tests
+        run: npm run contract:test
